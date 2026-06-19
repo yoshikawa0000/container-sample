@@ -2,35 +2,41 @@ version: 0.2
 
 env:
   variables:
+    AWS_REGION: ap-northeast-1
+    ECR_REGISTRY: 701699495666.dkr.ecr.ap-northeast-1.amazonaws.com
     ECR_REPOSITORY: 701699495666.dkr.ecr.ap-northeast-1.amazonaws.com/test-ecr
+    IMAGE_TAG: latest
+    CONTAINER_NAME: container-test-app
 
 phases:
   pre_build:
     commands:
-      - echo Logging in to Amazon ECR...
-      - aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS --password-stdin ${ECR_REPOSITORY}
+      - echo "Logging in to Amazon ECR..."
+      - aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${ECR_REGISTRY}"
+      - echo "ECR login completed."
+
   build:
     commands:
-      - echo Building the Docker image...
-      - docker build -t container-test-app .
-      - docker tag container-test-app:latest ${ECR_REPOSITORY}:latest
+      - echo "Building the Docker image..."
+      - docker build -t "${CONTAINER_NAME}:${IMAGE_TAG}" .
+      - docker tag "${CONTAINER_NAME}:${IMAGE_TAG}" "${ECR_REPOSITORY}:${IMAGE_TAG}"
+      - echo "Docker image build completed."
+
   post_build:
     commands:
-      - echo Pushing the Docker image...
-      - docker push ${ECR_REPOSITORY}:latest
-      - echo Build completed on `date`
-      - echo Creating imagedefinitions.json...
       - |
-        echo '[
-          {
-            "name": "container-test-app",
-            "imageUri": "'${ECR_REPOSITORY}':latest"
-          }
-        ]' > imagedefinitions.json
-      - echo imagedefinitions.json created.
+        if [ "${CODEBUILD_BUILD_SUCCEEDING}" -ne 1 ]; then
+          echo "Build failed. Skipping Docker push."
+          exit 1
+        fi
+      - echo "Pushing the Docker image..."
+      - docker push "${ECR_REPOSITORY}:${IMAGE_TAG}"
+      - echo "Creating imagedefinitions.json..."
+      - printf '[{"name":"%s","imageUri":"%s"}]' "${CONTAINER_NAME}" "${ECR_REPOSITORY}:${IMAGE_TAG}" > imagedefinitions.json
+      - cat imagedefinitions.json
+      - echo "Build completed on $(date)"
 
 artifacts:
   files:
     - imagedefinitions.json
-
-    
+```
