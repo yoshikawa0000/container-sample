@@ -2,11 +2,11 @@ version: 0.2
 
 env:
   variables:
-    AWS_REGION: ap-northeast-1
-    ECR_REGISTRY: 701699495666.dkr.ecr.ap-northeast-1.amazonaws.com
-    ECR_REPOSITORY: 701699495666.dkr.ecr.ap-northeast-1.amazonaws.com/test-ecr
-    IMAGE_TAG: latest
-    CONTAINER_NAME: container-test-app
+    AWS_REGION: "ap-northeast-1"
+    ECR_REGISTRY: "701699495666.dkr.ecr.ap-northeast-1.amazonaws.com"
+    ECR_REPOSITORY: "701699495666.dkr.ecr.ap-northeast-1.amazonaws.com/test-ecr"
+    IMAGE_TAG: "latest"
+    CONTAINER_NAME: "container-test-app"
 
 phases:
   pre_build:
@@ -18,8 +18,7 @@ phases:
   build:
     commands:
       - echo "Building the Docker image..."
-      - docker build -t "${CONTAINER_NAME}:${IMAGE_TAG}" .
-      - docker tag "${CONTAINER_NAME}:${IMAGE_TAG}" "${ECR_REPOSITORY}:${IMAGE_TAG}"
+      - docker build -t "${ECR_REPOSITORY}:${IMAGE_TAG}" .
       - echo "Docker image build completed."
 
   post_build:
@@ -32,11 +31,10 @@ phases:
       - echo "Pushing the Docker image..."
       - docker push "${ECR_REPOSITORY}:${IMAGE_TAG}"
       - echo "Creating imagedefinitions.json..."
-      - printf '[{"name":"%s","imageUri":"%s"}]' "${CONTAINER_NAME}" "${ECR_REPOSITORY}:${IMAGE_TAG}" > imagedefinitions.json
+      - printf '[{"name":"%s","imageUri":"%s"}]\n' "${CONTAINER_NAME}" "${ECR_REPOSITORY}:${IMAGE_TAG}" > imagedefinitions.json
       - cat imagedefinitions.json
       - echo "Build completed on $(date)"
 
 artifacts:
   files:
     - imagedefinitions.json
-```
