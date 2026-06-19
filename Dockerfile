@@ -1,8 +1,10 @@
-# nginxを使用
-FROM nginx:alpine
+```dockerfile
+# Amazon ECR Publicからnginxを取得
+FROM public.ecr.aws/docker/library/nginx:alpine
 
-# 作成したHTMLファイルをnginxのデフォルトの公開ディレクトリにコピー
+# 作成したHTMLファイルをnginxのデフォルト公開ディレクトリにコピー
 COPY index.html /usr/share/nginx/html/index.html
 
 # nginxを起動する
 CMD ["nginx", "-g", "daemon off;"]
+```
